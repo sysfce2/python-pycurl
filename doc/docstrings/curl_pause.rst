@@ -1,7 +1,8 @@
-pause(bitmask) -> None
+pause(bitmask=PAUSE_ALL) -> None
 
-Pause or unpause a curl handle. Bitmask should be a value such as
-PAUSE_RECV or PAUSE_CONT.
+Pause or unpause a curl handle. ``bitmask`` defaults to ``PAUSE_ALL``.
+Pass a value such as ``PAUSE_RECV``, ``PAUSE_SEND``, or ``PAUSE_CONT`` to
+override.
 
 Corresponds to `curl_easy_pause`_ in libcurl. The argument should be
 derived from the ``PAUSE_RECV``, ``PAUSE_SEND``, ``PAUSE_ALL`` and
