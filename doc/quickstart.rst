@@ -67,6 +67,10 @@ if not, consider using the `certifi`_ Python package::
     c.setopt(c.URL, 'https://python.org/')
     c.setopt(c.WRITEDATA, buffer)
     c.setopt(c.CAINFO, certifi.where())
+    # you can set proxy cainfo/capath to validate https the proxy
+    # if you use one
+    # c.setopt(c.PROXY, <your-proxy>)
+    # c.setopt(c.PROXY_CAINFO, certifi.where())
     c.perform()
     c.close()
 

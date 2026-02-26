@@ -306,8 +306,8 @@ and most SSL libraries do not provide.
 
 Here_ is a good resource on how to build your own certificate bundle.
 certifie.com also has a `prebuilt certificate bundle`_.
-To use the certificate bundle, use ``CAINFO`` or ``CAPATH`` PycURL
-options.
+To use the certificate bundle, use ``CAINFO``, ``CAPATH`` , ``PROXY_CAINFO``,
+and ``PROXY_CAPATH`` PycURL options.
 
 .. _Here: http://certifie.com/ca-bundle/
 .. _prebuilt certificate bundle: http://certifie.com/ca-bundle/ca-bundle.crt.txt

@@ -258,18 +258,32 @@ util_curl_init(CurlObject *self)
         return (-1);
     }
 
-    /* Set CAINFO or CAPATH if runtime autodetection enabled */
+    /* Set CAINFO/PROXY_CAINFO or CAPATH/PROXY_CAPATH if runtime autodetection enabled */
     #ifdef PYCURL_AUTODETECT_CA
     if (g_pycurl_autodetected_cainfo) {
         res = curl_easy_setopt(self->handle, CURLOPT_CAINFO, g_pycurl_autodetected_cainfo);
         if (res != CURLE_OK) {
             return (-1);
         }
+
+        #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
+        res = curl_easy_setopt(self->handle, CURLOPT_PROXY_CAINFO, g_pycurl_autodetected_cainfo);
+        if (res != CURLE_OK) {
+            return (-1);
+        }
+        #endif
     } else if (g_pycurl_autodetected_capath) {
         res = curl_easy_setopt(self->handle, CURLOPT_CAPATH, g_pycurl_autodetected_capath);
         if (res != CURLE_OK) {
             return (-1);
         }
+
+        #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
+        res = curl_easy_setopt(self->handle, CURLOPT_PROXY_CAPATH, g_pycurl_autodetected_capath);
+        if (res != CURLE_OK) {
+            return (-1);
+        }
+        #endif
     }
     #endif
 

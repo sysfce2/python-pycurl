@@ -317,6 +317,13 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_CAPATH, '/bogus-capath')
         curl.close()
 
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl_backends('openssl', 'gnutls', 'nss')
+    def test_proxy_cainfo(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_CAINFO, '/bogus-cainfo')
+        curl.close()
+
     @util.min_libcurl(7, 77, 0)
     @util.only_ssl_backends('openssl')
     def test_proxy_cainfo_blob(self):
@@ -430,7 +437,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1_1)
         curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1_2)
         curl.close()
- 
+
     # SSLVERSION_SSLv* return CURLE_BAD_FUNCTION_ARGUMENT with curl-7.77.0
     @util.min_libcurl(7, 52, 0)
     @util.removed_in_libcurl(7, 77, 0)
@@ -728,6 +735,6 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 33, 0)
     def test_xauth_bearer(self):
         self.curl.setopt(self.curl.XOAUTH2_BEARER, 'test')
-        
+
     def test_cookielist_constants(self):
         self.assertEqual(pycurl.OPT_COOKIELIST, pycurl.COOKIELIST)
