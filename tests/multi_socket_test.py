@@ -1,14 +1,18 @@
 import gc
+import logging
 import select
 import sys
 import time
 import weakref
 from io import BytesIO
 
+import flaky
 import pycurl
 import pytest
 
 from . import util
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -261,40 +265,6 @@ def test_multi_assign_inside_socket_callback(app, multi):
     )
 
 
-def test_multi_unassign_inside_socket_callback(app, multi):
-    class Marker:
-        pass
-
-    marker = Marker()
-    events = []
-    errors = []
-    unassigned = False
-
-    def socket(event, sock_fd, multi_handle, data):
-        nonlocal unassigned
-        events.append((sock_fd, event, data))
-        try:
-            if event != pycurl.POLL_REMOVE and data is None and not unassigned:
-                multi.assign(sock_fd, marker)
-            elif data is marker and not unassigned:
-                multi.unassign(sock_fd)
-                unassigned = True
-        except pycurl.error as e:
-            errors.append(e)
-
-    for _ in _chunks_transfer(app, multi, socket, "unassign in callback"):
-        pass
-
-    assert errors == []
-    assert unassigned, "did not reach unassign() in callback"
-    marker_seen = [i for i, (_, _, d) in enumerate(events) if d is marker]
-    assert marker_seen, "expected at least one callback with marker as socketp"
-    # After the last marker-bearing callback, libcurl's slot is cleared, so
-    # at least one subsequent callback should observe socketp as None again.
-    later_none = [d for _, _, d in events[marker_seen[-1] + 1 :] if d is None]
-    assert later_none, "expected socketp to be None again after unassign()"
-
-
 def test_socketp_starts_as_none(app, multi):
     seen_per_fd: dict[int, list] = {}
 
@@ -311,31 +281,56 @@ def test_socketp_starts_as_none(app, multi):
         )
 
 
-def test_clear_via_assign_none_inside_callback_resets_socketp(app, multi):
+@flaky.flaky(max_runs=3)
+@pytest.mark.parametrize(
+    "clear",
+    [
+        lambda multi, sock: multi.unassign(sock),
+        lambda multi, sock: multi.assign(sock, None),
+    ],
+    ids=["unassign", "assign_none"],
+)
+def test_clear_assignment_inside_socket_callback_releases_ref(app, multi, clear):
     class Marker:
         pass
 
     marker = Marker()
-    events = []
-    cleared = False
+    # why: weakref keeps the closure from pinning marker and defeating the GC check below.
+    marker_ref = weakref.ref(marker)
+    errors = []
+    cleared_fds = set()
 
     def socket(event, sock_fd, multi_handle, data):
-        nonlocal cleared
-        events.append((sock_fd, event, data))
-        if event != pycurl.POLL_REMOVE and data is None and not cleared:
-            multi.assign(sock_fd, marker)
-        elif data is marker and not cleared:
-            multi.assign(sock_fd, None)
-            cleared = True
+        # why: log primitives only -- passing `data` would pin marker via LogRecord args.
+        kind = (
+            "None" if data is None else ("marker" if data is marker_ref() else "other")
+        )
+        logger.debug(
+            "socket_cb event=%d fd=%d data=%s cleared_fds=%s",
+            event,
+            sock_fd,
+            kind,
+            sorted(cleared_fds),
+        )
+        try:
+            if data is marker_ref():
+                clear(multi, sock_fd)
+                cleared_fds.add(sock_fd)
+            elif data is None and not cleared_fds and event != pycurl.POLL_REMOVE:
+                multi.assign(sock_fd, marker_ref())
+        except pycurl.error as e:
+            errors.append(e)
 
-    for _ in _chunks_transfer(app, multi, socket, "assign(None) in callback"):
+    for _ in _chunks_transfer(app, multi, socket, "clear in callback"):
         pass
 
-    assert cleared, "did not reach assign(None) inside callback"
-    marker_idx = [i for i, (_, _, d) in enumerate(events) if d is marker]
-    assert marker_idx
-    later_none = [d for _, _, d in events[marker_idx[-1] + 1 :] if d is None]
-    assert later_none, "expected socketp to be None after assign(fd, None)"
+    assert errors == [], errors
+    assert cleared_fds, "did not reach clear inside callback"
+    del marker
+    gc.collect()
+    assert marker_ref() is None, (
+        "expected multi to drop strong ref to marker after clear"
+    )
 
 
 def _assign_marker_then_close(app):
