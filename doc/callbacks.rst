@@ -531,7 +531,7 @@ FNMATCH_FUNCTION
 HSTSWRITEFUNCTION
 -----------------
 
-.. function:: HSTSWRITEFUNCTION(entry, index) -> int
+.. function:: HSTSWRITEFUNCTION(entry, idx) -> int
 
     Callback for persisting the in-memory HSTS cache. Corresponds to
     `CURLOPT_HSTSWRITEFUNCTION`_ in libcurl. Requires ``HSTS_CTRL`` to be
@@ -546,10 +546,10 @@ HSTSWRITEFUNCTION
     *host* is ``bytes``. *expire* is a tz-aware ``datetime`` in UTC, or
     ``None`` when the entry never expires. *include_subdomains* is ``bool``.
 
-    *index* is an ``HstsIndex`` `namedtuple`_ indicating progress through
+    *idx* is an ``HstsIndex`` `namedtuple`_ indicating progress through
     the cache::
 
-        HstsIndex = namedtuple('HstsIndex', ('index', 'total'))
+        HstsIndex = namedtuple('HstsIndex', ('idx', 'total'))
 
     The callback should return ``CURLSTS_OK`` (entry accepted),
     ``CURLSTS_DONE`` (stop iterating) or ``CURLSTS_FAIL`` (error).

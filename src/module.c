@@ -1812,7 +1812,8 @@ PYCURL_IGNORE_DEPRECATED_END
             goto error;
         }
 
-        arglist = Py_BuildValue("ss", "HstsIndex", "index total");
+        /* Field is `idx`, not `index`, to avoid shadowing tuple.index() on the namedtuple. */
+        arglist = Py_BuildValue("ss", "HstsIndex", "idx total");
         if (arglist == NULL) {
             goto error;
         }
