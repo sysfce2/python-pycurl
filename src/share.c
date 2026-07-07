@@ -125,6 +125,9 @@ share_setopt_one(CurlShareObject *self, int option, long data_kind)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
     case CURL_LOCK_DATA_PSL:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 88, 0)
+    case CURL_LOCK_DATA_HSTS:
+#endif
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
