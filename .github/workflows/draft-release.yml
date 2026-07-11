@@ -36,4 +36,4 @@ jobs:
             --draft \
             --verify-tag \
             --title "PycURL ${VERSION}" \
-            --generate-notes
+            --notes ""

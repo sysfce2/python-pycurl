@@ -13,9 +13,9 @@ from the changelog and from ``git shortlog`` invocations such as the one
 in step 3 below.
 
 Pushing a ``vX.Y.Z`` tag triggers the Draft GitHub Release workflow
-(``.github/workflows/draft-release.yml``), which creates a draft GitHub
-Release with automatically generated release notes. Maintainers should
-review and edit the draft release before publishing it.
+(``.github/workflows/draft-release.yml``), which creates an empty draft
+GitHub Release. Maintainers write the release notes into the draft before
+publishing it.
 
 The existing manual Build Wheels workflow
 (``.github/workflows/cibuildwheel.yml``) remains the publishing path for
